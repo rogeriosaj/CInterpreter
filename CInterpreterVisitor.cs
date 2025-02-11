@@ -543,7 +543,99 @@ public class CInterpreterVisitor : CBaseVisitor<object>
         return base.VisitExpressionStatement(context);
     }
 
+//gets puts
 
+public override object VisitGetsStatement(CParser.GetsStatementContext context)
+{
+    string varName = context.IDENTIFIER().GetText();
+
+    // Forçar saída do console antes de esperar a entrada
+    Console.Out.Flush(); // Garante que o texto seja exibido antes da entrada
+
+    string? input = Console.ReadLine(); // Aguarda entrada do usuário
+
+    if (string.IsNullOrEmpty(input))
+    {
+        Console.WriteLine("Erro: Entrada inválida.");
+        return null;
+    }
+
+    memory[varName] = input; // Armazena a entrada na memória da variável
+    return null;
+}
+
+public override object VisitPutsStatement(CParser.PutsStatementContext context)
+{
+    string varName = context.IDENTIFIER().GetText();
+
+    if (!memory.ContainsKey(varName))
+    {
+        Console.WriteLine($"Erro: Variável '{varName}' não foi declarada.");
+        return null;
+    }
+
+    Console.WriteLine(memory[varName]);
+    return null;
+}
+
+public override object VisitScanfStatement(CParser.ScanfStatementContext context)
+{
+    // Obtém os argumentos do scanf
+    string format = context.STRING_LITERAL().GetText().Trim('"');
+
+    var identifiers = context.IDENTIFIER(); // Lista de variáveis que receberão valores
+
+    for (int i = 0; i < identifiers.Length; i++)
+    {
+        string varName = identifiers[i].GetText();
+        Console.Out.Flush(); // Garante que a mensagem seja exibida antes da entrada
+
+        string? input = Console.ReadLine();
+
+        if (string.IsNullOrEmpty(input))
+        {
+            Console.WriteLine("Erro: Entrada inválida.");
+            return null;
+        }
+
+        // Determina o tipo esperado baseado no formato do scanf (%d, %f, %s, etc.)
+        if (format.Contains("%d"))
+        {
+            if (int.TryParse(input, out int intValue))
+            {
+                memory[varName] = intValue;
+            }
+            else
+            {
+                Console.WriteLine($"Erro: '{input}' não é um número inteiro válido.");
+                return null;
+            }
+        }
+        else if (format.Contains("%f"))
+        {
+            if (float.TryParse(input, out float floatValue))
+            {
+                memory[varName] = floatValue;
+            }
+            else
+            {
+                Console.WriteLine($"Erro: '{input}' não é um número de ponto flutuante válido.");
+                return null;
+            }
+        }
+        else if (format.Contains("%s"))
+        {
+            memory[varName] = input;
+        }
+        else
+        {
+            Console.WriteLine($"Erro: Tipo de entrada não suportado no formato '{format}'.");
+            return null;
+        }
+    }
+
+    return null;
+}
 
 
 }

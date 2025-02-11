@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// Generated from ./Grammar/C.g4 by ANTLR 4.13.2
+// Generated from Grammar/C.g4 by ANTLR 4.13.2
 
 // Unreachable code detected
 #pragma warning disable 0162
@@ -239,6 +239,30 @@ public partial class CBaseListener : ICListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitStatement([NotNull] CParser.StatementContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="CParser.getsStatement"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterGetsStatement([NotNull] CParser.GetsStatementContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="CParser.getsStatement"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitGetsStatement([NotNull] CParser.GetsStatementContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="CParser.putsStatement"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterPutsStatement([NotNull] CParser.PutsStatementContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="CParser.putsStatement"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitPutsStatement([NotNull] CParser.PutsStatementContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="CParser.expressionStatement"/>.
 	/// <para>The default implementation does nothing.</para>

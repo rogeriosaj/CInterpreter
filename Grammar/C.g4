@@ -82,7 +82,9 @@ block
 
 // Instruções
 statement
-    : expressionStatement
+    : getsStatement
+    | putsStatement
+    | expressionStatement
     | blockStatement
     | ifStatement
     | returnStatement
@@ -99,6 +101,17 @@ statement
     | arrayDeclaration
     | matrixDeclaration
     ;
+
+// gets recebe entrada do usuário
+getsStatement
+    : 'gets' '(' IDENTIFIER ')' ';'
+    ;
+
+// puts imprime uma string
+putsStatement
+    : 'puts' '(' IDENTIFIER ')' ';'
+    ;
+
 
 // Expressão de instrução
 expressionStatement

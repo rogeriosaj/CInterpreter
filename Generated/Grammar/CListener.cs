@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// Generated from ./Grammar/C.g4 by ANTLR 4.13.2
+// Generated from Grammar/C.g4 by ANTLR 4.13.2
 
 // Unreachable code detected
 #pragma warning disable 0162
@@ -200,6 +200,26 @@ public interface ICListener : IParseTreeListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	void ExitStatement([NotNull] CParser.StatementContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="CParser.getsStatement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterGetsStatement([NotNull] CParser.GetsStatementContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="CParser.getsStatement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitGetsStatement([NotNull] CParser.GetsStatementContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="CParser.putsStatement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterPutsStatement([NotNull] CParser.PutsStatementContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="CParser.putsStatement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitPutsStatement([NotNull] CParser.PutsStatementContext context);
 	/// <summary>
 	/// Enter a parse tree produced by <see cref="CParser.expressionStatement"/>.
 	/// </summary>

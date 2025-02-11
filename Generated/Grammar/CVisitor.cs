@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// Generated from ./Grammar/C.g4 by ANTLR 4.13.2
+// Generated from Grammar/C.g4 by ANTLR 4.13.2
 
 // Unreachable code detected
 #pragma warning disable 0162
@@ -133,6 +133,18 @@ public interface ICVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitStatement([NotNull] CParser.StatementContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="CParser.getsStatement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitGetsStatement([NotNull] CParser.GetsStatementContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="CParser.putsStatement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitPutsStatement([NotNull] CParser.PutsStatementContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="CParser.expressionStatement"/>.
 	/// </summary>
