@@ -156,6 +156,30 @@ public partial class CBaseListener : ICListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitStructDeclaration([NotNull] CParser.StructDeclarationContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="CParser.structInstance"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterStructInstance([NotNull] CParser.StructInstanceContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="CParser.structInstance"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitStructInstance([NotNull] CParser.StructInstanceContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="CParser.structAssignment"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterStructAssignment([NotNull] CParser.StructAssignmentContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="CParser.structAssignment"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitStructAssignment([NotNull] CParser.StructAssignmentContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="CParser.structMember"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>

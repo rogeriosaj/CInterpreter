@@ -10,7 +10,6 @@ public class CInterpreterVisitor : CBaseVisitor<object>
     private Dictionary<string, object> memory = new Dictionary<string, object>();
     private Dictionary<string, CParser.FunctionDeclarationContext> functions = new Dictionary<string, CParser.FunctionDeclarationContext>();
     private Dictionary<string, Dictionary<string, object>> structs = new Dictionary<string, Dictionary<string, object>>();
-
     // -------------------- VARIÁVEIS --------------------
     public override object VisitVariableDeclaration(CParser.VariableDeclarationContext context)
     {
@@ -35,21 +34,21 @@ public class CInterpreterVisitor : CBaseVisitor<object>
 
     private int EvaluateExpression(string expr)
     {
-        expr = expr.Trim();
-
-        // Substituir todas as variáveis armazenadas por seus valores numéricos
-        foreach (var variable in memory.Keys)
-        {
-            if (expr.Contains(variable))
-            {
-                expr = expr.Replace(variable, memory[variable].ToString());
-            }
-        }
-
         try
         {
+            expr = expr.Trim();
+
+            // Substituir variáveis por seus valores na memória
+            foreach (var var in memory.Keys)
+            {
+                // Substituir variáveis no contexto da expressão
+                expr = Regex.Replace(expr, $@"\b{var}\b", memory[var].ToString());
+            }
+
+            // Avaliar a expressão matemática usando DataTable
             DataTable table = new DataTable();
-            object result = table.Compute(expr, ""); // Agora pode avaliar corretamente "5+10"
+            object result = table.Compute(expr, "");
+
             return Convert.ToInt32(result);
         }
         catch (Exception ex)
@@ -62,24 +61,61 @@ public class CInterpreterVisitor : CBaseVisitor<object>
 
     private bool EvaluateCondition(string expr)
     {
-        expr = expr.Trim();
-
-        // Impede substituição de números por variáveis
-        foreach (var variable in memory.Keys.OrderByDescending(k => k.Length))
-        {
-            if (Regex.IsMatch(expr, $@"\b{variable}\b"))
-            {
-                expr = Regex.Replace(expr, $@"\b{variable}\b", memory[variable].ToString());
-            }
-        }
-
         try
         {
-            return Convert.ToBoolean(new DataTable().Compute(expr, ""));
+            expr = expr.Trim();
+
+            // Substituir variáveis na expressão
+            foreach (var var in memory.Keys)
+            {
+                expr = Regex.Replace(expr, $@"\b{var}\b", memory[var].ToString());
+            }
+
+            Console.WriteLine($"DEBUG: Expressão condicional após substituição = '{expr}'");
+
+            // Avaliar expressões compostas com && e ||
+            string pattern = @"(\d+)\s*(==|!=|<=|>=|<|>)\s*(\d+)";
+            Match match = Regex.Match(expr, pattern);
+
+            if (!match.Success)
+            {
+                Console.WriteLine($"Erro ao avaliar condição '{expr}': Expressão inválida.");
+                return false;
+            }
+
+            // Extraindo os operandos e o operador
+            int leftOperand = int.Parse(match.Groups[1].Value);
+            string op = match.Groups[2].Value;
+            int rightOperand = int.Parse(match.Groups[3].Value);
+
+            bool result = op switch
+            {
+                "==" => leftOperand == rightOperand,
+                "!=" => leftOperand != rightOperand,
+                "<"  => leftOperand < rightOperand,
+                ">"  => leftOperand > rightOperand,
+                "<=" => leftOperand <= rightOperand,
+                ">=" => leftOperand >= rightOperand,
+                _ => throw new Exception("Operador inválido.")
+            };
+
+            // Avaliar operadores && e || se existirem na expressão
+            if (expr.Contains("&&"))
+            {
+                string[] subExpressions = expr.Split("&&");
+                return EvaluateCondition(subExpressions[0].Trim()) && EvaluateCondition(subExpressions[1].Trim());
+            }
+            else if (expr.Contains("||"))
+            {
+                string[] subExpressions = expr.Split("||");
+                return EvaluateCondition(subExpressions[0].Trim()) || EvaluateCondition(subExpressions[1].Trim());
+            }
+
+            return result;
         }
-        catch
+        catch (Exception ex)
         {
-            Console.WriteLine($"Erro ao avaliar condição '{expr}': Expressão inválida.");
+            Console.WriteLine($"Erro ao avaliar condição '{expr}': {ex.Message}");
             return false;
         }
     }
@@ -177,45 +213,117 @@ public class CInterpreterVisitor : CBaseVisitor<object>
     // -------------------- FUNÇÕES --------------------
     public override object VisitFunctionDeclaration(CParser.FunctionDeclarationContext context)
     {
-        string? functionName = context.IDENTIFIER()?.GetText(); // Pode ser NULL!
-        if (functionName != null)
-        {
-            Console.WriteLine($"Função declarada: {functionName}");
-            functions[functionName] = context;
-        }
-        else
-        {
-            Console.WriteLine("Erro: Nome da função é nulo.");
-        }
-        return null;
+        string functionName = context.IDENTIFIER().GetText(); // Nome da função
+        string returnType = context.type()?.GetText() ?? "void"; // Evita null no tipo de retorno
+        Console.WriteLine($"Função declarada: {returnType} {functionName}");
+
+        // Armazena a função no dicionário para chamadas futuras
+        functions[functionName] = context;
+
+        return null!;
     }
 
     public override object VisitFunctionCallStatement(CParser.FunctionCallStatementContext context)
     {
-        string functionName = context.IDENTIFIER().GetText();
-        Console.WriteLine($"Chamando função: {functionName}");
-        return VisitChildren(context);
-    }
+        string functionName = context.IDENTIFIER().GetText(); // Nome da função chamada
 
+        Console.WriteLine($"Tentando chamar a função: {functionName}");
+
+        // Verifica se a função foi declarada
+        if (!functions.ContainsKey(functionName))
+        {
+            Console.WriteLine($"Erro: Função '{functionName}' não foi declarada.");
+            return null!;
+        }
+
+        Console.WriteLine($"Chamando função: {functionName}");
+
+        // Obtém o contexto da função armazenado
+        var functionContext = functions[functionName];
+        string returnType = functionContext.type()?.GetText() ?? "void"; // Evita null no tipo de retorno
+
+        // *Captura os argumentos passados para a função*
+        List<object> argumentos = new List<object>();
+
+        if (context.expression() != null)
+        {
+            foreach (var expr in context.expression())
+            {
+                object? valor = Visit(expr);
+                if (valor == null)
+                {
+                    Console.WriteLine($"Erro: Argumento de {functionName} retornou null.");
+                    return null!;
+                }
+                argumentos.Add(valor);
+            }
+        }
+
+        // *Executa o corpo da função e captura o retorno*
+        object? returnValue = Visit(functionContext.block());
+
+        if (returnType != "void")
+        {
+            Console.WriteLine($"Função '{functionName}' retornou: {returnValue}");
+            return returnValue ?? 0; // Substitui null por 0
+        }
+
+        return null!;
+    }
 
     public override object VisitReturnStatement(CParser.ReturnStatementContext context)
     {
-        string returnValue = context.expression()?.GetText();
-        if (returnValue != null)
+        if (context.expression() != null)
         {
-            Console.WriteLine($"Retornando: {EvaluateExpression(returnValue)}");
-            return EvaluateExpression(returnValue);
+            object returnValue = Visit(context.expression()); // Avalia a expressão do return
+            
+            return returnValue ?? 0;  // Retorna o valor corretamente para a função chamadora
         }
-        return null;
+
+        return null!;
     }
 
     // -------------------- STRUCTS --------------------
     public override object VisitStructDeclaration(CParser.StructDeclarationContext context)
     {
         string structName = context.IDENTIFIER().GetText();
+        var fields = new Dictionary<string, object>();
+
+        foreach (var field in context.structMember())
+        {
+            string tipo = field.type().GetText();
+            string varName = field.IDENTIFIER().GetText();
+            fields[varName] = tipo == "int" ? 0 : ""; // Inicializa valores padrão
+        }
+
+        structs[structName] = fields;
         Console.WriteLine($"Struct declarada: {structName}");
+
         return null;
     }
+
+
+    public override object VisitStructAssignment(CParser.StructAssignmentContext context)
+    {
+        string structVar = context.IDENTIFIER(0).GetText();  // "pessoa"
+        string fieldName = context.IDENTIFIER(1).GetText();  // "codigo"
+        int value = EvaluateExpression(context.expression().GetText());
+
+        if (memory.ContainsKey(structVar) && memory[structVar] is Dictionary<string, object> structInstance)
+        {
+            structInstance[fieldName] = value;
+            Console.WriteLine($"Atribuição: {structVar}.{fieldName} = {value}");
+        }
+        else
+        {
+            Console.WriteLine($"Erro: Variável '{structVar}' não é uma struct ou não existe.");
+        }
+
+        return null;
+    }
+
+
+
 
     // -------------------- DIRETIVAS DE COMPILAÇÃO --------------------
     public override object VisitPreprocessorDirective(CParser.PreprocessorDirectiveContext context)
@@ -318,6 +426,124 @@ public class CInterpreterVisitor : CBaseVisitor<object>
         return null;
     }
 
-    
+    public override object VisitWhileStatement(CParser.WhileStatementContext context)
+    {
+        // Obtemos a condição do while
+        string conditionText = context.expression().GetText();
+        
+        // Avaliamos a condição
+        bool condition = EvaluateCondition(conditionText);
+        Console.WriteLine($"Condição do while: {conditionText} => {condition}");
+
+        // Enquanto a condição for verdadeira, executa o corpo do laço
+        while (condition)
+        {
+            // Executa o corpo do while (o statement dentro do while)
+            Visit(context.statement());
+
+            // Agora, reavaliamos a condição para a próxima iteração
+            condition = EvaluateCondition(conditionText);
+            Console.WriteLine($"Condição do while após execução: {conditionText} => {condition}");
+
+            // Atualizando o valor de i, caso tenha sido modificado dentro do while
+            if (memory.ContainsKey("i"))
+            {
+                // Incrementa o valor de 'i' diretamente na memória
+                int i = (int)memory["i"];
+                memory["i"] = i + 1;  // Incrementa i
+                Console.WriteLine($"Valor de i após incremento: {memory["i"]}");
+            }
+        }
+
+        return null;
+    }
+
+    public override object VisitDoWhileStatement(CParser.DoWhileStatementContext context)
+    {
+        // Executa o corpo do loop pelo menos uma vez
+        Console.WriteLine("Executando corpo do do-while...");
+        Visit(context.statement());  // Executa o bloco de código dentro do 'do'
+
+        // Incrementa a variável 'i' (se estiver sendo usada no corpo)
+        if (memory.ContainsKey("i"))
+        {
+            memory["i"] = (int)memory["i"] + 1;  // Incrementa 'i'
+            Console.WriteLine($"Valor de i após incremento: {memory["i"]}");
+        }
+
+        // Verifica a condição do 'while' após a execução
+        string conditionText = context.expression().GetText();
+        Console.WriteLine($"Condição do do-while antes da avaliação: {conditionText}");
+
+        // Avalia a condição
+        bool condition = EvaluateCondition(conditionText);  // Avalia a condição após o corpo
+
+        // Se a condição for verdadeira, repete o loop
+        Console.WriteLine($"Condição do do-while após execução: {conditionText} => {condition}");
+
+        if (condition)
+        {
+            // Chama recursivamente para executar o loop novamente
+            VisitDoWhileStatement(context);  
+        }
+
+        return null;
+    }
+
+    public override object VisitExpressionStatement(CParser.ExpressionStatementContext context)
+    {
+        string expr = context.expression().GetText().Trim();
+
+        // Verifica se é um incremento `a++` ou `++a`
+        if (Regex.IsMatch(expr, @"^\w+\+\+$") || Regex.IsMatch(expr, @"^\+\+\w+$"))
+        {
+            string varName = expr.Replace("++", "").Trim();
+            if (memory.ContainsKey(varName))
+            {
+                if (memory[varName] is int intValue)
+                {
+                    memory[varName] = intValue + 1;  // Incrementa a variável corretamente
+                }
+                else
+                {
+                    Console.WriteLine($"Erro: variável '{varName}' não é um inteiro.");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Erro: variável '{varName}' não encontrada.");
+            }
+            return null;
+        }
+
+        // Verifica se é um decremento `a--` ou `--a`
+        if (Regex.IsMatch(expr, @"^\w+--$") || Regex.IsMatch(expr, @"^--\w+$"))
+        {
+            string varName = expr.Replace("--", "").Trim();
+            if (memory.ContainsKey(varName))
+            {
+                if (memory[varName] is int intValue)
+                {
+                    memory[varName] = intValue - 1;  // Decrementa a variável corretamente
+                }
+                else
+                {
+                    Console.WriteLine($"Erro: variável '{varName}' não é um inteiro.");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Erro: variável '{varName}' não encontrada.");
+            }
+            return null;
+        }
+
+        // Outros tratamentos para expressões podem ser adicionados aqui
+
+        return base.VisitExpressionStatement(context);
+    }
+
+
+
 
 }

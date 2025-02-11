@@ -1,11 +1,10 @@
 #include <stdio.h>
 
-void printMessage(int a, int b) {
+void printMessage() {
     printf("Função sem retorno");
-    printf("%d", a + b);
 }
 
 int main() {
-    printMessage(5, 6); 
+    printMessage(); 
     return 0;
 }

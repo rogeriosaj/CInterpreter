@@ -131,6 +131,26 @@ public interface ICListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitStructDeclaration([NotNull] CParser.StructDeclarationContext context);
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="CParser.structInstance"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterStructInstance([NotNull] CParser.StructInstanceContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="CParser.structInstance"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitStructInstance([NotNull] CParser.StructInstanceContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="CParser.structAssignment"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterStructAssignment([NotNull] CParser.StructAssignmentContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="CParser.structAssignment"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitStructAssignment([NotNull] CParser.StructAssignmentContext context);
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="CParser.structMember"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

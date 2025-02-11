@@ -53,7 +53,14 @@ structDeclaration
     : 'struct' IDENTIFIER '{' structMember* '}' ';'
     ;
 
-// Membros de struct
+structInstance
+    : 'struct' IDENTIFIER IDENTIFIER ';'   // Exemplo: struct Pessoa pessoa;
+    ;
+
+structAssignment
+    : IDENTIFIER '.' IDENTIFIER '=' expression ';'  // Exemplo: pessoa.codigo = 1;
+    ;
+
 structMember
     : type IDENTIFIER ('[' CONSTANT ']')? ';'
     ;
@@ -248,12 +255,11 @@ unaryExpression
     ;
 primaryExpression
     : '(' expression ')'
-    | IDENTIFIER ('.' IDENTIFIER)* ('[' expression ']')* 
+    | IDENTIFIER ('.' IDENTIFIER)* ('[' expression ']')*
     | CONSTANT
     | STRING_LITERAL
     | 'sizeof' '(' type ')'
     ;
-
 
 // Tokens
 CONSTANT: INT | FLOAT | CHAR;

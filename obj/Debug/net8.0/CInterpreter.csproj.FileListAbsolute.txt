@@ -32,3 +32,4 @@
 /home/rsaj/Documents/uenp/compilers/cinterpreter/CInterpreter/obj/Debug/net8.0/CInterpreter.csproj.CopyComplete
 /home/rsaj/Documents/uenp/compilers/cinterpreter/CInterpreter/obj/Debug/net8.0/CInterpreter.genruntimeconfig.cache
 /home/rsaj/Documents/uenp/compilers/cinterpreter/CInterpreter/obj/Debug/net8.0/ref/CInterpreter.dll
+/home/rsaj/Documents/uenp/compilers/cinterpreter/CInterpreter/obj/Debug/net8.0/CInterpreter.sourcelink.json

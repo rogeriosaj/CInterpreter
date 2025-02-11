@@ -92,6 +92,18 @@ public interface ICVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitStructDeclaration([NotNull] CParser.StructDeclarationContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="CParser.structInstance"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitStructInstance([NotNull] CParser.StructInstanceContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="CParser.structAssignment"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitStructAssignment([NotNull] CParser.StructAssignmentContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="CParser.structMember"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
