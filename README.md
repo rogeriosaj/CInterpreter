@@ -1,6 +1,6 @@
 # CInterpreter - Interpretador da Linguagem C
 
-## 📌 Visão Geral
+##  Visão Geral
 
 O **CInterpreter** é um interpretador desenvolvido para processar programas escritos na linguagem **C**. Ele utiliza **ANTLR4** para análise léxica e sintática, seguido de um interpretador baseado em **C#** que executa o código interpretado.
 
@@ -8,7 +8,7 @@ O interpretador suporta diversas construções da linguagem **C**, incluindo **e
 
 ---
 
-## 🚀 **Componentes Principais**
+##  **Componentes Principais**
 
 O interpretador é composto pelos seguintes módulos principais:
 
@@ -38,17 +38,17 @@ O interpretador é composto pelos seguintes módulos principais:
 
 ---
 
-## 📌 **Características e Funcionalidades**
+##  **Características e Funcionalidades**
 
 O **CInterpreter** implementa as seguintes funcionalidades da linguagem **C**:
 
-### ✅ **1. Declaração e Inicialização de Variáveis**
+###  **1. Declaração e Inicialização de Variáveis**
 
 - Suporte para **inteiros (********`int`********), caracteres (********`char`********), ponto flutuante (********`float`******** e ********`double`********)**.
 - Suporte a **arrays e ponteiros (********`*`********)**.
 - Verificação de **tipos e inicialização**.
 
-✅ **Exemplo:**
+ **Exemplo:**
 
 ```c
 int a = 10;
@@ -58,13 +58,13 @@ double pi = 3.14;
 
 ---
 
-### ✅ **2. Estruturas de Controle**
+###  **2. Estruturas de Controle**
 
 - **`if`**, **`if-else`**
 - **`switch-case`**
-- **`for`**, ****`while`****, **`do-while`**
+- **`while`**, **`do-while`**
 
-✅ **Exemplo (********`if-else`********):**
+ **Exemplo (********`if-else`********):**
 
 ```c
 if (a > b) {
@@ -74,7 +74,7 @@ if (a > b) {
 }
 ```
 
-✅ **Exemplo (********`while`******** loop):**
+✅ **Exemplo (**`while`):
 
 ```c
 int a = 5;
@@ -84,7 +84,7 @@ while (a < 10) {
 }
 ```
 
-✅ **Exemplo (********`switch-case`********):**
+✅ **Exemplo (**`switch-case`):
 
 ```c
 switch(a) {
@@ -103,19 +103,23 @@ switch(a) {
 
 ### ✅ **3. Entrada e Saída (********`printf`********, ********`scanf`********)**
 
-- Suporte para **exibição de valores (********`printf`********)**.
-- Suporte básico para **entrada do usuário (********`scanf`********)**.
+- Suporte para **exibição de valores (****`printf`, `puts`****)**.
+- Suporte básico para **entrada do usuário (****`scanf`, `gets`****)**.
 
-✅ **Exemplo (********`printf`********):**
+✅ **Exemplo (****`printf`, `puts`****):**
 
 ```c
 printf("O valor de a é %d", a);
+
+puts(texto);
 ```
 
-✅ **Exemplo (********`scanf`********):**
+✅ **Exemplo (****`scanf`, `gets`****):**
 
 ```c
 scanf("%d", &a);
+
+gets(texto);
 ```
 
 ---
@@ -132,68 +136,40 @@ scanf("%d", &a);
 ```c
 int soma = a + b;
 int produto = a * b;
-(a > b)
+(a > b);
 (b < c);
+("a && b = %d");
 ```
 
 ---
 
-### ✅ **5. Funções (com e sem retorno)**
+### ✅ **5. Funções (sem retorno)**
 
-- Suporte para **funções com e sem retorno**.
-- Suporte para **passagem de parâmetros**.
+- Suporte para **sem retorno**.
+- Sem suporte para **passagem de parâmetros**.
 
 ✅ **Exemplo:**
 
 ```c
-int soma(int a, int b) {
-    return a + b;
+void printmessage() {
+    printf("Mensagem de print da função");
 }
 
 int main() {
-    int resultado = soma(5, 10);
-    printf("Soma: %d", resultado);
+    printmessage();
     return 0;
 }
 ```
-
----
-
-### ✅ \*\*6. Suporte a ****`structs`**** e \*\***`unions`**
-
-- Permite a criação de **estruturas complexas**.
-- Suporta **acesso a membros (********`pessoa.codigo`********)**.
-
-✅ **Exemplo (********`struct`********)**
-
-```c
-struct Pessoa {
-    int codigo;
-    int idade;
-};
-
-int main() {
-    struct Pessoa pessoa;
-    pessoa.codigo = 1;
-    pessoa.idade = 20;
-    printf("Código: %d, Idade: %d", pessoa.codigo, pessoa.idade);
-    return 0;
-}
-```
-
 ---
 
 ### ✅ **7. Diretivas de Pré-Processamento (********`#include`********, ********`#define`********)**
 
 - Reconhece **`#include <stdio.h>`**\*\* e outras bibliotecas.\*\*
-- Suporte para **`#define`**\*\* macros\*\*.
 
-✅ **Exemplo:**
+---
+### ✅ **8. Mensagens de Erro 
 
-```c
-#define PI 3.14
-printf("Valor de PI: %f", PI);
-```
+- Retorna mensagens de erro em casos de falha na execução ou erros no código teste, como atribuição errada de variáveis.
 
 ---
 
@@ -224,19 +200,7 @@ Retornando: 0
 
 ---
 
-## 📌 **Conclusão**
+### **Alunos**
 
-O **CInterpreter** é um interpretador funcional que suporta diversas características da linguagem C, incluindo **variáveis, operadores, estruturas de controle, funções, structs e entrada/saída**.
-
-✅ **Suporta uma ampla gama de recursos da linguagem C.**
-✅ **Utiliza ANTLR4 para análise léxica e sintática.**
-✅ **Implementado em C# para execução eficiente.**
-✅ **Facilmente extensível para novas funcionalidades.**
-
-**🎯 Próximos passos:**
-
-- Melhorar suporte para `scanf`.
-- Implementar suporte a **ponteiros e alocação dinâmica (********`malloc`********, ********`free`********)**.
-- Adicionar **mais bibliotecas padrões (********`math.h`********, ********`string.h`********)**.
-
-📌 **Desenvolvido por: [Seu Nome]**
+- Rogério SAJ
+- Gustavo Denobi

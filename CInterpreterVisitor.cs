@@ -35,162 +35,174 @@ public class CInterpreterVisitor : CBaseVisitor<object>
         return null;
     }
 
- private int EvaluateExpression(string expr)
-{
-    try
+    private object EvaluateExpression(string expr)
     {
-        expr = expr.Trim();
-
-        // Substituir variáveis por seus valores na memória
-        foreach (var var in memory.Keys)
+        try
         {
-            expr = Regex.Replace(expr, $@"\b{var}\b", memory[var].ToString());
+            expr = expr.Trim();
+
+            // Substituir variáveis por seus valores armazenados na memória
+            foreach (var var in memory.Keys)
+            {
+                expr = Regex.Replace(expr, $@"\b{var}\b", memory[var].ToString());
+            }
+
+            // 🔹 1. TRATAR OPERADORES LÓGICOS (`&&` e `||`)
+            if (expr.Contains("&&") || expr.Contains("||"))
+            {
+                string[] subExpressions;
+                bool result;
+
+                if (expr.Contains("&&"))
+                {
+                    subExpressions = expr.Split("&&");
+                    result = Convert.ToBoolean(EvaluateExpression(subExpressions[0].Trim())) &&
+                            Convert.ToBoolean(EvaluateExpression(subExpressions[1].Trim()));
+                }
+                else
+                {
+                    subExpressions = expr.Split("||");
+                    result = Convert.ToBoolean(EvaluateExpression(subExpressions[0].Trim())) ||
+                            Convert.ToBoolean(EvaluateExpression(subExpressions[1].Trim()));
+                }
+
+                return result ? 1 : 0;
+            }
+
+            // 🔹 2. TRATAR OPERADORES DE IGUALDADE (`==`, `!=`)
+            if (expr.Contains("==") || expr.Contains("!="))
+            {
+                string[] parts;
+                bool result;
+
+                if (expr.Contains("=="))
+                {
+                    parts = expr.Split("==");
+                    result = EvaluateExpression(parts[0].Trim()).Equals(EvaluateExpression(parts[1].Trim()));
+                }
+                else
+                {
+                    parts = expr.Split("!=");
+                    result = !EvaluateExpression(parts[0].Trim()).Equals(EvaluateExpression(parts[1].Trim()));
+                }
+
+                return result ? 1 : 0;
+            }
+
+            if (expr.StartsWith("!"))
+            {
+                string innerExpr = expr.Substring(1).Trim();
+                int value = (int)EvaluateExpression(innerExpr);
+                return value == 0 ? 1 : 0; // Inverte o valor lógico
+            }
+
+
+            // 🔹 3. TRATAR EXPRESSÕES RELACIONAIS (`<`, `>`, `<=`, `>=`)
+            if (Regex.IsMatch(expr, @"\d+(\.\d+)?\s*(<|>|<=|>=)\s*\d+(\.\d+)?"))
+            {
+                string pattern = @"(\d+(\.\d+)?)\s*(<|>|<=|>=)\s*(\d+(\.\d+)?)";
+                Match match = Regex.Match(expr, pattern);
+
+                if (match.Success)
+                {
+                    double left = double.Parse(match.Groups[1].Value);
+                    string op = match.Groups[3].Value;
+                    double right = double.Parse(match.Groups[4].Value);
+
+                    return op switch
+                    {
+                        "<" => left < right ? 1 : 0,
+                        ">" => left > right ? 1 : 0,
+                        "<=" => left <= right ? 1 : 0,
+                        ">=" => left >= right ? 1 : 0,
+                        _ => throw new Exception("Operador inválido.")
+                    };
+                }
+            }
+
+            // 🔹 4. AVALIAR EXPRESSÕES MATEMÁTICAS COM DETECÇÃO DE TIPO
+            DataTable table = new DataTable();
+            object resultEval = table.Compute(expr, "");
+
+            // Verifica se o resultado é um número decimal
+            if (resultEval is double doubleValue)
+            {
+                // Se for um número decimal exato (exemplo: 5.0), retorna como int
+                if (doubleValue % 1 == 0)
+                    return (int)doubleValue;
+
+                // Caso contrário, mantém como double
+                return doubleValue;
+            }
+
+            return resultEval;
         }
-
-        // 🔹 1. TRATAR OPERADORES LÓGICOS (`&&` e `||`)
-        if (expr.Contains("&&") || expr.Contains("||"))
+        catch (Exception ex)
         {
-            string[] subExpressions;
-            bool result;
+            Console.WriteLine($"Erro ao avaliar expressão '{expr}': {ex.Message}");
+            return 0;
+        }
+    }
 
+
+
+    private bool EvaluateCondition(string expr)
+    {
+        try
+        {
+            expr = expr.Trim();
+
+            // Substituir variáveis na expressão
+            foreach (var var in memory.Keys)
+            {
+                expr = Regex.Replace(expr, $@"\b{var}\b", memory[var].ToString());
+            }
+
+            Console.WriteLine($"DEBUG: Expressão condicional após substituição = '{expr}'");
+
+            // 🔹 1. TRATAR EXPRESSÕES COM `&&` E `||`
             if (expr.Contains("&&"))
             {
-                subExpressions = expr.Split("&&");
-                result = EvaluateExpression(subExpressions[0].Trim()) != 0 &&
-                         EvaluateExpression(subExpressions[1].Trim()) != 0;
+                string[] subExpressions = expr.Split("&&");
+                return EvaluateCondition(subExpressions[0].Trim()) && EvaluateCondition(subExpressions[1].Trim());
             }
-            else
+            else if (expr.Contains("||"))
             {
-                subExpressions = expr.Split("||");
-                result = EvaluateExpression(subExpressions[0].Trim()) != 0 ||
-                         EvaluateExpression(subExpressions[1].Trim()) != 0;
+                string[] subExpressions = expr.Split("||");
+                return EvaluateCondition(subExpressions[0].Trim()) || EvaluateCondition(subExpressions[1].Trim());
             }
 
-            return result ? 1 : 0;
-        }
-
-        // 🔹 2. TRATAR OPERADORES DE IGUALDADE (`==`, `!=`)
-        if (expr.Contains("==") || expr.Contains("!="))
-        {
-            string[] parts;
-            bool result;
-
-            if (expr.Contains("=="))
-            {
-                parts = expr.Split("==");
-                result = EvaluateExpression(parts[0].Trim()) == EvaluateExpression(parts[1].Trim());
-            }
-            else
-            {
-                parts = expr.Split("!=");
-                result = EvaluateExpression(parts[0].Trim()) != EvaluateExpression(parts[1].Trim());
-            }
-
-            return result ? 1 : 0;
-        }
-
-        // 🔹 3. TRATAR `!a` (NOT lógico)
-        if (expr.StartsWith("!"))
-        {
-            string innerExpr = expr.Substring(1).Trim();
-            int value = EvaluateExpression(innerExpr);
-            return value == 0 ? 1 : 0; // Inverte o valor lógico
-        }
-
-        // 🔹 4. TRATAR EXPRESSÕES RELACIONAIS (`<`, `>`, `<=`, `>=`)
-        if (Regex.IsMatch(expr, @"\d+\s*(<|>|<=|>=)\s*\d+"))
-        {
-            string pattern = @"(\d+)\s*(<|>|<=|>=)\s*(\d+)";
+            // 🔹 2. TRATAR COMPARAÇÕES RELACIONAIS
+            string pattern = @"(\d+)\s*(==|!=|<=|>=|<|>)\s*(\d+)";
             Match match = Regex.Match(expr, pattern);
 
             if (match.Success)
             {
-                int left = int.Parse(match.Groups[1].Value);
+                int leftOperand = int.Parse(match.Groups[1].Value);
                 string op = match.Groups[2].Value;
-                int right = int.Parse(match.Groups[3].Value);
+                int rightOperand = int.Parse(match.Groups[3].Value);
 
                 return op switch
                 {
-                    "<" => left < right ? 1 : 0,
-                    ">" => left > right ? 1 : 0,
-                    "<=" => left <= right ? 1 : 0,
-                    ">=" => left >= right ? 1 : 0,
+                    "==" => leftOperand == rightOperand,
+                    "!=" => leftOperand != rightOperand,
+                    "<"  => leftOperand < rightOperand,
+                    ">"  => leftOperand > rightOperand,
+                    "<=" => leftOperand <= rightOperand,
+                    ">=" => leftOperand >= rightOperand,
                     _ => throw new Exception("Operador inválido.")
                 };
             }
+
+            // Se a expressão for apenas um número, considera verdadeiro se for diferente de 0
+            return int.TryParse(expr, out int num) && num != 0;
         }
-
-        // 🔹 5. AVALIAR EXPRESSÕES MATEMÁTICAS
-        DataTable table = new DataTable();
-        object resultEval = table.Compute(expr, "");
-
-        return Convert.ToInt32(resultEval);
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Erro ao avaliar expressão '{expr}': {ex.Message}");
-        return 0;
-    }
-}
-
-
-private bool EvaluateCondition(string expr)
-{
-    try
-    {
-        expr = expr.Trim();
-
-        // Substituir variáveis na expressão
-        foreach (var var in memory.Keys)
+        catch (Exception ex)
         {
-            expr = Regex.Replace(expr, $@"\b{var}\b", memory[var].ToString());
+            Console.WriteLine($"Erro ao avaliar condição '{expr}': {ex.Message}");
+            return false;
         }
-
-        Console.WriteLine($"DEBUG: Expressão condicional após substituição = '{expr}'");
-
-        // 🔹 1. TRATAR EXPRESSÕES COM `&&` E `||`
-        if (expr.Contains("&&"))
-        {
-            string[] subExpressions = expr.Split("&&");
-            return EvaluateCondition(subExpressions[0].Trim()) && EvaluateCondition(subExpressions[1].Trim());
-        }
-        else if (expr.Contains("||"))
-        {
-            string[] subExpressions = expr.Split("||");
-            return EvaluateCondition(subExpressions[0].Trim()) || EvaluateCondition(subExpressions[1].Trim());
-        }
-
-        // 🔹 2. TRATAR COMPARAÇÕES RELACIONAIS
-        string pattern = @"(\d+)\s*(==|!=|<=|>=|<|>)\s*(\d+)";
-        Match match = Regex.Match(expr, pattern);
-
-        if (match.Success)
-        {
-            int leftOperand = int.Parse(match.Groups[1].Value);
-            string op = match.Groups[2].Value;
-            int rightOperand = int.Parse(match.Groups[3].Value);
-
-            return op switch
-            {
-                "==" => leftOperand == rightOperand,
-                "!=" => leftOperand != rightOperand,
-                "<"  => leftOperand < rightOperand,
-                ">"  => leftOperand > rightOperand,
-                "<=" => leftOperand <= rightOperand,
-                ">=" => leftOperand >= rightOperand,
-                _ => throw new Exception("Operador inválido.")
-            };
-        }
-
-        // Se a expressão for apenas um número, considera verdadeiro se for diferente de 0
-        return int.TryParse(expr, out int num) && num != 0;
     }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Erro ao avaliar condição '{expr}': {ex.Message}");
-        return false;
-    }
-}
 
 
 
@@ -221,41 +233,41 @@ private bool EvaluateCondition(string expr)
     }
 
     public override object VisitForStatement(CParser.ForStatementContext context)
-{
-    var forControl = context.forControl();
+    {
+        var forControl = context.forControl();
 
-    // Inicializa o loop
-    if (forControl.variableDeclaration() != null)
-    {
-        Visit(forControl.variableDeclaration());
-    }
-    else if (forControl.expression(0) != null)
-    {
-        Visit(forControl.expression(0));
-    }
-
-    while (true)
-    {
-        // Avaliação da condição
-        if (forControl.expression(1) != null)
+        // Inicializa o loop
+        if (forControl.variableDeclaration() != null)
         {
-            string conditionText = forControl.expression(1).GetText();
-            if (!EvaluateCondition(conditionText)) break;
+            Visit(forControl.variableDeclaration());
+        }
+        else if (forControl.expression(0) != null)
+        {
+            Visit(forControl.expression(0));
         }
 
-        // Executa o corpo do loop
-        Visit(context.statement());
-
-        // Incremento, incluindo expressões complexas
-        if (forControl.expression(2) != null)
+        while (true)
         {
-            string incrementText = forControl.expression(2).GetText();
-            Visit(forControl.expression(2));
-        }
-    }
+            // Avaliação da condição
+            if (forControl.expression(1) != null)
+            {
+                string conditionText = forControl.expression(1).GetText();
+                if (!EvaluateCondition(conditionText)) break;
+            }
 
-    return null;
-}
+            // Executa o corpo do loop
+            Visit(context.statement());
+
+            // Incremento, incluindo expressões complexas
+            if (forControl.expression(2) != null)
+            {
+                string incrementText = forControl.expression(2).GetText();
+                Visit(forControl.expression(2));
+            }
+        }
+
+        return null;
+    }
 
 
     // -------------------- FUNÇÕES --------------------
@@ -272,75 +284,75 @@ private bool EvaluateCondition(string expr)
     }
 
     public override object VisitFunctionCallStatement(CParser.FunctionCallStatementContext context)
-{
-    string functionName = context.IDENTIFIER().GetText();
-
-    // Verifica se a função foi declarada
-    if (!functions.ContainsKey(functionName))
     {
-        Console.WriteLine($"Erro: Função '{functionName}' não foi declarada.");
-        return null!;
-    }
+        string functionName = context.IDENTIFIER().GetText();
 
-    var functionContext = functions[functionName];
-
-    // Captura os argumentos passados
-    List<object> argumentos = new List<object>();
-
-    if (context.expression() != null)
-    {
-        foreach (var expr in context.expression())
+        // Verifica se a função foi declarada
+        if (!functions.ContainsKey(functionName))
         {
-            object? valor = Visit(expr);
-            if (valor == null)
-            {
-                Console.WriteLine($"Erro: Argumento de {functionName} retornou null.");
-                return null!;
-            }
-            argumentos.Add(valor);
-        }
-    }
-
-    // Criar um escopo local para os parâmetros da função
-    var localMemory = new Dictionary<string, object>();
-
-    var parameterList = functionContext.parameterList();
-    if (parameterList != null)
-    {
-        var parametros = parameterList.parameter();
-
-        if (parametros.Length != argumentos.Count)
-        {
-            Console.WriteLine($"Erro: Número incorreto de argumentos para '{functionName}'.");
+            Console.WriteLine($"Erro: Função '{functionName}' não foi declarada.");
             return null!;
         }
 
-        for (int i = 0; i < parametros.Length; i++)
+        var functionContext = functions[functionName];
+
+        // Captura os argumentos passados
+        List<object> argumentos = new List<object>();
+
+        if (context.expression() != null)
         {
-            string paramName = parametros[i].IDENTIFIER().GetText();
-            localMemory[paramName] = argumentos[i];
+            foreach (var expr in context.expression())
+            {
+                object? valor = Visit(expr);
+                if (valor == null)
+                {
+                    Console.WriteLine($"Erro: Argumento de {functionName} retornou null.");
+                    return null!;
+                }
+                argumentos.Add(valor);
+            }
         }
-    }
 
-    // Executa o bloco da função
-    object? returnValue = Visit(functionContext.block());
+        // Criar um escopo local para os parâmetros da função
+        var localMemory = new Dictionary<string, object>();
 
+        var parameterList = functionContext.parameterList();
+        if (parameterList != null)
+        {
+            var parametros = parameterList.parameter();
 
-    return returnValue ?? 0;
-}
+            if (parametros.Length != argumentos.Count)
+            {
+                Console.WriteLine($"Erro: Número incorreto de argumentos para '{functionName}'.");
+                return null!;
+            }
 
+            for (int i = 0; i < parametros.Length; i++)
+            {
+                string paramName = parametros[i].IDENTIFIER().GetText();
+                localMemory[paramName] = argumentos[i];
+            }
+        }
 
-   public override object VisitReturnStatement(CParser.ReturnStatementContext context)
-{
-    if (context.expression() != null)
-    {
-        object returnValue = Visit(context.expression());
+        // Executa o bloco da função
+        object? returnValue = Visit(functionContext.block());
+
 
         return returnValue ?? 0;
     }
 
-    return null!;
-}
+
+   public override object VisitReturnStatement(CParser.ReturnStatementContext context)
+    {
+        if (context.expression() != null)
+        {
+            object returnValue = Visit(context.expression());
+
+            return returnValue ?? 0;
+        }
+
+        return null!;
+    }
 
     // -------------------- STRUCTS --------------------
     public override object VisitStructDeclaration(CParser.StructDeclarationContext context)
@@ -362,24 +374,24 @@ private bool EvaluateCondition(string expr)
     }
 
 
-    public override object VisitStructAssignment(CParser.StructAssignmentContext context)
-    {
-        string structVar = context.IDENTIFIER(0).GetText();  // "pessoa"
-        string fieldName = context.IDENTIFIER(1).GetText();  // "codigo"
-        int value = EvaluateExpression(context.expression().GetText());
+    // public override object VisitStructAssignment(CParser.StructAssignmentContext context)
+    // {
+    //     string structVar = context.IDENTIFIER(0).GetText();  // "pessoa"
+    //     string fieldName = context.IDENTIFIER(1).GetText();  // "codigo"
+    //     int value = EvaluateExpression(context.expression().GetText());
 
-        if (memory.ContainsKey(structVar) && memory[structVar] is Dictionary<string, object> structInstance)
-        {
-            structInstance[fieldName] = value;
-            Console.WriteLine($"Atribuição: {structVar}.{fieldName} = {value}");
-        }
-        else
-        {
-            Console.WriteLine($"Erro: Variável '{structVar}' não é uma struct ou não existe.");
-        }
+    //     if (memory.ContainsKey(structVar) && memory[structVar] is Dictionary<string, object> structInstance)
+    //     {
+    //         structInstance[fieldName] = value;
+    //         Console.WriteLine($"Atribuição: {structVar}.{fieldName} = {value}");
+    //     }
+    //     else
+    //     {
+    //         Console.WriteLine($"Erro: Variável '{structVar}' não é uma struct ou não existe.");
+    //     }
 
-        return null;
-    }
+    //     return null;
+    // }
 
 
 
@@ -394,7 +406,6 @@ private bool EvaluateCondition(string expr)
 
     public override object VisitPrintfStatement(CParser.PrintfStatementContext context)
     {
-        // Verifica se há uma string no printf
         if (context.STRING_LITERAL() == null)
         {
             Console.WriteLine("Erro: printf chamado sem string de formato.");
@@ -402,11 +413,8 @@ private bool EvaluateCondition(string expr)
         }
 
         string format = context.STRING_LITERAL().GetText().Trim('"');
-
-        // Obtém os argumentos, se existirem
         var args = context.expression()?.Select(expr => EvaluateExpression(expr.GetText())).ToArray();
 
-        // Substituir "%d" por valores reais das variáveis
         if (args != null)
         {
             foreach (var arg in args)
@@ -414,15 +422,31 @@ private bool EvaluateCondition(string expr)
                 int index = format.IndexOf("%d");
                 if (index != -1)
                 {
-                    format = format.Substring(0, index) + arg.ToString() + format.Substring(index + 2);
+                    if (arg is double doubleValue)
+                    {
+                        if (doubleValue % 1 == 0)
+                        {
+                            // Se for decimal mas sem casas decimais, imprimir como inteiro
+                            format = format.Substring(0, index) + ((int)doubleValue).ToString() + format.Substring(index + 2);
+                        }
+                        else
+                        {
+                            // Se for decimal com casas decimais, imprimir com 2 casas
+                            format = format.Substring(0, index) + doubleValue.ToString("F2") + format.Substring(index + 2);
+                        }
+                    }
+                    else
+                    {
+                        format = format.Substring(0, index) + arg.ToString() + format.Substring(index + 2);
+                    }
                 }
             }
         }
 
-        // Imprimir a saída do printf
         Console.WriteLine(format);
         return null;
     }
+
 
     public override object VisitSelectionStatement(CParser.SelectionStatementContext context)
     {
@@ -446,14 +470,39 @@ private bool EvaluateCondition(string expr)
     public override object VisitSwitchStatement(CParser.SwitchStatementContext context)
     {
         string switchExpression = context.expression().GetText();
-        int switchValue = EvaluateExpression(switchExpression);
+        object switchValueObj = EvaluateExpression(switchExpression);
 
+        // Garantir que switchValue seja um int ou convertível
+        if (switchValueObj is double doubleValue && doubleValue % 1 == 0)
+        {
+            switchValueObj = (int)doubleValue;  // Se for float sem casas decimais, converte para int
+        }
+        else if (switchValueObj is not int)
+        {
+            Console.WriteLine($"Erro: Expressão do switch '{switchExpression}' não é um número inteiro válido.");
+            return null;
+        }
+
+        int switchValue = (int)switchValueObj;
         bool caseMatched = false;
 
         foreach (var caseStatement in context.caseStatement())
         {
             string caseExpression = caseStatement.CONSTANT().GetText();
-            int caseValue = EvaluateExpression(caseExpression);
+            object caseValueObj = EvaluateExpression(caseExpression);
+
+            // Garantir que caseValue seja um int
+            if (caseValueObj is double caseDoubleValue && caseDoubleValue % 1 == 0)
+            {
+                caseValueObj = (int)caseDoubleValue;  // Se for float sem casas decimais, converte para int
+            }
+            else if (caseValueObj is not int)
+            {
+                Console.WriteLine($"Erro: Valor do case '{caseExpression}' não é um número inteiro válido.");
+                continue;
+            }
+
+            int caseValue = (int)caseValueObj;
 
             if (switchValue == caseValue)
             {
@@ -484,6 +533,7 @@ private bool EvaluateCondition(string expr)
 
         return null;
     }
+
 
     public override object VisitWhileStatement(CParser.WhileStatementContext context)
     {
@@ -561,7 +611,7 @@ private bool EvaluateCondition(string expr)
             {
                 if (memory[varName] is int intValue)
                 {
-                    memory[varName] = intValue + 1;  // Incrementa a variável corretamente
+                    memory[varName] = intValue + 1;  
                 }
                 else
                 {
@@ -583,7 +633,7 @@ private bool EvaluateCondition(string expr)
             {
                 if (memory[varName] is int intValue)
                 {
-                    memory[varName] = intValue - 1;  // Decrementa a variável corretamente
+                    memory[varName] = intValue - 1;  
                 }
                 else
                 {
@@ -604,52 +654,14 @@ private bool EvaluateCondition(string expr)
 
 //gets puts
 
-public override object VisitGetsStatement(CParser.GetsStatementContext context)
-{
-    string varName = context.IDENTIFIER().GetText();
-
-    // Forçar saída do console antes de esperar a entrada
-    Console.Out.Flush(); // Garante que o texto seja exibido antes da entrada
-
-    string? input = Console.ReadLine(); // Aguarda entrada do usuário
-
-    if (string.IsNullOrEmpty(input))
+    public override object VisitGetsStatement(CParser.GetsStatementContext context)
     {
-        Console.WriteLine("Erro: Entrada inválida.");
-        return null;
-    }
+        string varName = context.IDENTIFIER().GetText();
 
-    memory[varName] = input; // Armazena a entrada na memória da variável
-    return null;
-}
+        // Forçar saída do console antes de esperar a entrada
+        Console.Out.Flush(); // Garante que o texto seja exibido antes da entrada
 
-public override object VisitPutsStatement(CParser.PutsStatementContext context)
-{
-    string varName = context.IDENTIFIER().GetText();
-
-    if (!memory.ContainsKey(varName))
-    {
-        Console.WriteLine($"Erro: Variável '{varName}' não foi declarada.");
-        return null;
-    }
-
-    Console.WriteLine(memory[varName]);
-    return null;
-}
-
-public override object VisitScanfStatement(CParser.ScanfStatementContext context)
-{
-    // Obtém os argumentos do scanf
-    string format = context.STRING_LITERAL().GetText().Trim('"');
-
-    var identifiers = context.IDENTIFIER(); // Lista de variáveis que receberão valores
-
-    for (int i = 0; i < identifiers.Length; i++)
-    {
-        string varName = identifiers[i].GetText();
-        Console.Out.Flush(); // Garante que a mensagem seja exibida antes da entrada
-
-        string? input = Console.ReadLine();
+        string? input = Console.ReadLine(); // Aguarda entrada do usuário
 
         if (string.IsNullOrEmpty(input))
         {
@@ -657,44 +669,82 @@ public override object VisitScanfStatement(CParser.ScanfStatementContext context
             return null;
         }
 
-        // Determina o tipo esperado baseado no formato do scanf (%d, %f, %s, etc.)
-        if (format.Contains("%d"))
-        {
-            if (int.TryParse(input, out int intValue))
-            {
-                memory[varName] = intValue;
-            }
-            else
-            {
-                Console.WriteLine($"Erro: '{input}' não é um número inteiro válido.");
-                return null;
-            }
-        }
-        else if (format.Contains("%f"))
-        {
-            if (float.TryParse(input, out float floatValue))
-            {
-                memory[varName] = floatValue;
-            }
-            else
-            {
-                Console.WriteLine($"Erro: '{input}' não é um número de ponto flutuante válido.");
-                return null;
-            }
-        }
-        else if (format.Contains("%s"))
-        {
-            memory[varName] = input;
-        }
-        else
-        {
-            Console.WriteLine($"Erro: Tipo de entrada não suportado no formato '{format}'.");
-            return null;
-        }
+        memory[varName] = input; // Armazena a entrada na memória da variável
+        return null;
     }
 
-    return null;
-}
+    public override object VisitPutsStatement(CParser.PutsStatementContext context)
+    {
+        string varName = context.IDENTIFIER().GetText();
+
+        if (!memory.ContainsKey(varName))
+        {
+            Console.WriteLine($"Erro: Variável '{varName}' não foi declarada.");
+            return null;
+        }
+
+        Console.WriteLine(memory[varName]);
+        return null;
+    }
+
+    public override object VisitScanfStatement(CParser.ScanfStatementContext context)
+    {
+        // Obtém os argumentos do scanf
+        string format = context.STRING_LITERAL().GetText().Trim('"');
+
+        var identifiers = context.IDENTIFIER(); // Lista de variáveis que receberão valores
+
+        for (int i = 0; i < identifiers.Length; i++)
+        {
+            string varName = identifiers[i].GetText();
+            Console.Out.Flush(); // Garante que a mensagem seja exibida antes da entrada
+
+            string? input = Console.ReadLine();
+
+            if (string.IsNullOrEmpty(input))
+            {
+                Console.WriteLine("Erro: Entrada inválida.");
+                return null;
+            }
+
+            // Determina o tipo esperado baseado no formato do scanf (%d, %f, %s, etc.)
+            if (format.Contains("%d"))
+            {
+                if (int.TryParse(input, out int intValue))
+                {
+                    memory[varName] = intValue;
+                }
+                else
+                {
+                    Console.WriteLine($"Erro: '{input}' não é um número inteiro válido.");
+                    return null;
+                }
+            }
+            else if (format.Contains("%f"))
+            {
+                if (float.TryParse(input, out float floatValue))
+                {
+                    memory[varName] = floatValue;
+                }
+                else
+                {
+                    Console.WriteLine($"Erro: '{input}' não é um número de ponto flutuante válido.");
+                    return null;
+                }
+            }
+            else if (format.Contains("%s"))
+            {
+                memory[varName] = input;
+            }
+            else
+            {
+                Console.WriteLine($"Erro: Tipo de entrada não suportado no formato '{format}'.");
+                return null;
+            }
+        }
+
+        return null;
+    }
 
 //Unions
 

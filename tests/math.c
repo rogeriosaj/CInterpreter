@@ -1,8 +1,8 @@
 #include <stdio.h>
 
 int main() {
-    int a = 10;
-    float b = 5;
+    float a = 10.6;
+    float b = 5.6;
     printf("A soma é: %d", a + b);
     printf("O produto é: %d", a * b);
     printf("A divisão de a por b é: %d", a / b);
