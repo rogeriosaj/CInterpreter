@@ -122,6 +122,18 @@ public interface ICVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitUnionMember([NotNull] CParser.UnionMemberContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="CParser.unionInstance"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitUnionInstance([NotNull] CParser.UnionInstanceContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="CParser.unionAssignment"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitUnionAssignment([NotNull] CParser.UnionAssignmentContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="CParser.block"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

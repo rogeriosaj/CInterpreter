@@ -70,11 +70,20 @@ unionDeclaration
     : 'union' IDENTIFIER '{' unionMember* '}' ';'
     ;
 
-// Membros de union
+// Membros da union
 unionMember
     : type IDENTIFIER ('[' CONSTANT ']')? ';'
     ;
 
+// Instância de union
+unionInstance
+    : 'union' IDENTIFIER IDENTIFIER ';'   // Exemplo: union Data d;
+    ;
+
+// Atribuição de union
+unionAssignment
+    : IDENTIFIER '.' IDENTIFIER '=' expression ';'  // Exemplo: d.i = 10;
+    ;
 // Bloco de código
 block
     : '{' statement* '}'
@@ -177,7 +186,7 @@ doWhileStatement
 
 // Chamada de função
 functionCallStatement
-    : IDENTIFIER '(' (expression (',' expression)*)? ')' ';'
+    : IDENTIFIER '(' (expression (',' expression)*)? ')'
     ;
 
 // Declaração return
@@ -263,16 +272,21 @@ multiplicativeExpression
 
 unaryExpression
     : primaryExpression
-    | unaryExpression ('++' | '--') 
-    | ('++' | '--') unaryExpression 
+    | unaryExpression ('++' | '--')     // Pós-incremento e pós-decremento (a++, a--)
+    | ('++' | '--') unaryExpression     // Pré-incremento e pré-decremento (++a, --a)
+    | ('!' | '~') unaryExpression       // Operadores NOT lógico e NOT bitwise (!a, ~a)
     ;
+
+// Expressão que inclui chamadas de função
 primaryExpression
-    : '(' expression ')'
+    : functionCallStatement
+    | '(' expression ')'
     | IDENTIFIER ('.' IDENTIFIER)* ('[' expression ']')*
     | CONSTANT
     | STRING_LITERAL
     | 'sizeof' '(' type ')'
     ;
+
 
 // Tokens
 CONSTANT: INT | FLOAT | CHAR;

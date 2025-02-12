@@ -216,6 +216,30 @@ public partial class CBaseListener : ICListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitUnionMember([NotNull] CParser.UnionMemberContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="CParser.unionInstance"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterUnionInstance([NotNull] CParser.UnionInstanceContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="CParser.unionInstance"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitUnionInstance([NotNull] CParser.UnionInstanceContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="CParser.unionAssignment"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterUnionAssignment([NotNull] CParser.UnionAssignmentContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="CParser.unionAssignment"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitUnionAssignment([NotNull] CParser.UnionAssignmentContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="CParser.block"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>

@@ -181,6 +181,26 @@ public interface ICListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitUnionMember([NotNull] CParser.UnionMemberContext context);
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="CParser.unionInstance"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterUnionInstance([NotNull] CParser.UnionInstanceContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="CParser.unionInstance"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitUnionInstance([NotNull] CParser.UnionInstanceContext context);
+	/// <summary>
+	/// Enter a parse tree produced by <see cref="CParser.unionAssignment"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterUnionAssignment([NotNull] CParser.UnionAssignmentContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="CParser.unionAssignment"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitUnionAssignment([NotNull] CParser.UnionAssignmentContext context);
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="CParser.block"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

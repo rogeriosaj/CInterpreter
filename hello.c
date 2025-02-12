@@ -1,21 +1,19 @@
 #include <stdio.h>
-#include <stdlib.h>  // Para atoi()
+
+union Data {
+    int i;
+    float f;
+    char str[20];
+};
 
 int main() {
-    char nome[50];
-    char idadeStr[10];  // Armazena a idade como string
-    int idade;
+    union Data d;
 
-    printf("Digite seu nome: ");
-    gets(nome);
+    d.i = 10;
+    printf("d.i: %d\n", d.i);
 
-    printf("Digite sua idade: ");
-    gets(idadeStr);  // Lê a idade como string
-
-    idade = atoi(idadeStr);  // Converte string para inteiro
-
-    printf("Nome: %s\n", nome);
-    printf("Idade (convertida): %d\n", idade);
+    d.f = 220.5;
+    printf("d.f: %.2f\n", d.f);
 
     return 0;
 }

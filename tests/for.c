@@ -1,10 +1,10 @@
 #include <stdio.h>
 
 int main() {
-    int i = 4;
-
-    for (int j = 0; j < i; j++) {
-        printf("%d\n", j);
+    int i;
+    
+    for (i = 0; i < 5; i++) {
+        printf("Valor de i: %d", i);
     }
 
     return 0;
